@@ -1,0 +1,171 @@
+# domsure — LLM context file
+
+> One-page machine-readable brief for LLMs and coding agents consuming this
+> package. Modeled on the `llm.txt` convention. If you've pulled `domsure`
+> into a project and need to use it correctly, read this first.
+
+## TL;DR
+
+`domsure` replaces `document.querySelector(...)!` style non-null assertions
+with real runtime checks that throw branded errors when an element is
+missing. Six helpers, under 1 KB gzipped, zero dependencies, ESM + CJS.
+
+## Install
+
+```sh
+npm install domsure      # or: pnpm add domsure / yarn add domsure
+deno add @samdev/domsure # Deno / JSR
+```
+
+## Imports
+
+```ts
+import { $, $$, defineSelectors, DomsureError, resetWarnings } from 'domsure';
+```
+
+## API reference (correct usage)
+
+### `$` — single element, silent
+
+```ts
+const el = $('#modal');              // HTMLElement | null
+```
+
+Simple `#id` selectors use `getElementById` (faster). Compound selectors
+like `#app .item` or `#nav.active` fall through to `querySelector`. Never
+warns. Returns `null` if missing — that's intentional.
+
+### `$.required` — single element, throws if missing
+
+```ts
+const app = $.required('#app');      // HTMLElement, never null
+```
+
+Throws `DomsureError` if the selector matches nothing. This is the primary
+use case for the whole package. **Prefer this over the `!` assertion.**
+
+### `$.optional` — single element, warns once in dev
+
+```ts
+const tooltip = $.optional('#tooltip');  // HTMLElement | null
+```
+
+Warns once per selector in development when the element is missing, then
+stays quiet (deduped). No warnings in production. Returns `null` if missing.
+
+### `$.exists` — presence check
+
+```ts
+if ($.exists('#tooltip')) { /* ... */ }
+```
+
+Boolean. No warnings, no element back.
+
+### `$$` — multiple elements
+
+```ts
+const items = $$('.item');                       // HTMLElement[]
+const rows  = $$.required('.row');               // throws if zero match
+const maybe = $$.optional('.row');               // warns once in dev if zero
+if ($$.exists('.row')) { /* ... */ }
+```
+
+`querySelectorAll` returned as a real `Array`, so `.map`/`.filter`/`.reduce`
+work directly — no spread, no `Array.from`.
+
+### `defineSelectors` — typed selector registry
+
+```ts
+const S = defineSelectors({
+  navbar: '#navbar',
+  items:  '.item',
+} as const);
+
+S.navbar;   // typed as "#navbar", not string
+```
+
+Frozen registry. Pass `as const` for string-literal inference. In dev it
+rejects non-string values and duplicate selectors (usually a copy-paste
+typo). Production builds strip the validation.
+
+### `resetWarnings` — clear the warn-once dedup set
+
+```ts
+resetWarnings();
+```
+
+Call after a route change in long-lived SPAs, or between tests for isolation.
+
+### `DomsureError` — branded error
+
+```ts
+try {
+  $.required('#missing');
+} catch (e) {
+  if (e instanceof DomsureError) {
+    console.error(e.selector, e.message);  // structured: no regex on prose
+  }
+}
+```
+
+Carries the offending `selector` as a field. Catch by type, not by
+string-matching the message.
+
+## Type parameter `<T>` — read carefully
+
+```ts
+const canvas = $.required<HTMLCanvasElement>('#chart');
+```
+
+`<T>` narrows the *return type*. It is a **cast**, not tag inference.
+`$<HTMLCanvasElement>('#div')` compiles fine. Nothing in this package
+verifies the element's actual tag at runtime. Use `$.required()` for a
+runtime guarantee that the element *exists*; verify the tag yourself if
+you need to.
+
+## SSR / isomorphic code
+
+`domsure` reads `document` directly. Under SSR (`document` is undefined),
+`$` and `$$` throw `DomsureError` instead of failing silently. Guard it:
+
+```ts
+if (typeof window !== 'undefined') {
+  const el = $.required('#app');
+}
+```
+
+Do not expect null returns under SSR — you get a thrown error by design.
+
+## Common mistakes LLMs make with this package
+
+1. **Using `$` when you mean `$.required`.** `$` returns `null` silently.
+   If you derefence the result without a null check, use `$.required`.
+2. **Treating `<T>` as tag verification.** It is not. It only narrows the
+   type for the caller; no runtime check happens.
+3. **Expecting `$$` to return a `NodeList`.** It returns `HTMLElement[]`.
+   Spread/`Array.from` is unnecessary.
+4. **Wrapping calls in try/catch and swallowing `DomsureError`.** Fail
+   fast. If you catch it, rethrow or handle meaningfully — don't return
+   a default.
+5. **Adding a null fallback under SSR.** The library throws on purpose.
+   Guard with `typeof window !== 'undefined'` instead.
+6. **Calling `resetWarnings` in production hot paths.** It's for route
+   changes and test isolation, not per-render.
+
+## Size
+
+| Bundle | Raw | Gzipped |
+|---|---|---|
+| ESM `dist/index.js`  | ~2.1 KB | ~0.9 KB |
+| CJS `dist/index.cjs` | ~2.6 KB | ~1.1 KB |
+
+Zero runtime dependencies. `sideEffects: false` so bundlers can tree-shake.
+
+## Node support
+
+Node >= 18. ES2020 target. Works in any modern browser, Deno, and bundlers
+(Vite, webpack, Rollup, esbuild).
+
+## License
+
+MIT. See `LICENSE`.

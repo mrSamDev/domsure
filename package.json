@@ -1,0 +1,66 @@
+{
+  "name": "domsure",
+  "version": "0.2.0",
+  "packageManager": "pnpm@9.5.0",
+  "description": "DOM query utilities — required/optional assertions, fast #id queries, and typed selector registries",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samdev/domsure.git"
+  },
+  "bugs": "https://github.com/samdev/domsure/issues",
+  "homepage": "https://github.com/samdev/domsure#readme",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "verify:cjs": "node -e \"require('./dist/index.cjs')\"",
+    "size": "size-limit",
+    "prepublishOnly": "pnpm build && pnpm verify:cjs && pnpm size",
+    "publish:npm": "pnpm publish",
+    "publish:jsr": "deno publish"
+  },
+  "devDependencies": {
+    "@size-limit/file": "^12.1.0",
+    "@types/node": "^26.1.0",
+    "@vitest/coverage-v8": "^3.2.6",
+    "jsdom": "^26.0.0",
+    "size-limit": "^12.1.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "dom",
+    "query",
+    "selector",
+    "querySelector",
+    "getElementById",
+    "assertion",
+    "required",
+    "non-null"
+  ],
+  "license": "MIT"
+}

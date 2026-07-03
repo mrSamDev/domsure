@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+coverage/
+.vitest-cache/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+# the exact published bytes from main.
+.deepsec
+dist

@@ -1,0 +1,51 @@
+name: Publish to npm
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# Only one publish at a time.
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for `npm publish --provenance` (Sigstore OIDC).
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: pnpm
+          # Provenance requires a registry that supports it (npm public).
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm test:coverage
+      - run: pnpm build
+      - run: pnpm verify:cjs
+      - run: pnpm size
+      - name: Verify no placeholder URLs
+        run: "! grep -n '<you>\\|<owner>\\|<repo>' package.json"
+      - name: Verify changelog has an Unreleased section
+        run: grep -q '## \[Unreleased\]' CHANGELOG.md
+      - name: Verify release tag
+        run: |
+          if ! git describe --tags --exact-match HEAD >/dev/null 2>&1; then
+            echo "::error::Refusing to publish: HEAD is not an exact version tag."
+            echo "When triggering via workflow_dispatch, select a tag ref, not a branch."
+            exit 1
+          fi
+          TAG="$(git describe --tags --exact-match HEAD)"
+          echo "Publishing from tag: $TAG"
+      - name: Publish
+        run: pnpm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

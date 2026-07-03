@@ -1,0 +1,25 @@
+{
+  "name": "@samdev/domsure",
+  "version": "0.2.0",
+  "exports": "./src/index.ts",
+  "compilerOptions": {
+    "lib": ["dom", "es2020", "deno.ns"]
+  },
+  "publish": {
+    "include": ["src/**/*.ts", "README.md", "LICENSE"]
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "semi": true,
+    "singleQuote": true
+  },
+  "tasks": {
+    "test": "deno test --no-check",
+    "check": "deno check src/index.ts",
+    "publish": "deno publish"
+  }
+}
