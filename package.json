@@ -26,10 +26,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/samdev/domsure.git"
+    "url": "git+https://github.com/mrSamDev/domsure.git"
   },
-  "bugs": "https://github.com/samdev/domsure/issues",
-  "homepage": "https://github.com/samdev/domsure#readme",
+  "bugs": "https://github.com/mrSamDev/domsure/issues",
+  "homepage": "https://github.com/mrSamDev/domsure#readme",
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
