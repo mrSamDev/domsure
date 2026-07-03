@@ -10,8 +10,8 @@
   public function. If something there is unclear, that's a documentation bug —
   open an issue.
 
-[bug]: https://github.com/samdev/domsure/issues/new?template=bug_report.md
-[feature]: https://github.com/samdev/domsure/issues/new?template=feature_request.md
+[bug]: https://github.com/@mrsamdev/domsure/issues/new?template=bug_report.md
+[feature]: https://github.com/@mrsamdev/domsure/issues/new?template=feature_request.md
 [readme]: ./README.md#api
 
 ## Before filing an issue

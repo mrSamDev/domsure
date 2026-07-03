@@ -13,8 +13,8 @@ missing. Six helpers, under 1 KB gzipped, zero dependencies, ESM + CJS.
 ## Install
 
 ```sh
-npm install domsure      # or: pnpm add domsure / yarn add domsure
-deno add @samdev/domsure # Deno / JSR
+npm install @mrsamdev/domsure      # or: pnpm add domsure / yarn add domsure
+deno add @mrsamdev/domsure # Deno / JSR
 ```
 
 ## Imports

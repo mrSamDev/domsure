@@ -32,8 +32,8 @@ contributors, not consumers.
 ## Install
 
 ```sh
-npm install domsure       # or: pnpm add domsure / yarn add domsure
-deno add @samdev/domsure  # Deno / JSR
+npm install @mrsamdev/domsure       # or: pnpm add domsure / yarn add domsure
+deno add @mrsamdev/domsure  # Deno / JSR
 ```
 
 ## Procedure: migrate a codebase to domsure

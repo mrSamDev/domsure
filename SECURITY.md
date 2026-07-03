@@ -15,7 +15,7 @@ minor or patch versions.
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Email **security@samdev.io** with:
+Email **security@@mrsamdev.io** with:
 
 - A description of the issue and its impact.
 - A minimal reproduction (selector string, DOM shape, expected vs actual).
