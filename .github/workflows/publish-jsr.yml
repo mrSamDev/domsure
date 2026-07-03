@@ -2,7 +2,7 @@ name: Publish to JSR
 
 on:
   push:
-    tags: ['v*']
+    tags: ['d*']
   workflow_dispatch:
 
 concurrency:

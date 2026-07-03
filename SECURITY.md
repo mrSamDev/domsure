@@ -25,6 +25,14 @@ You will receive an acknowledgment within 48 hours. Coordinated disclosure is
 preferred; we will credit reporters in the release notes unless you ask to
 remain anonymous.
 
+## Supply-chain provenance
+
+`domsure` is published to JSR from GitHub Actions, so JSR automatically
+attaches a SLSA provenance statement and records it in the Sigstore Rekor
+transparency log. Consumers can verify a published version was built from this
+repository's source with no in-between tampering. See
+[`PROVENANCE.md`](./PROVENANCE.md) for how to view and verify it.
+
 ## Threat model
 
 domsure passes consumer-supplied CSS selector strings to the browser's native

@@ -22,6 +22,16 @@ navbar.classList.add("active");
 npm install domsure
 ```
 
+Deno / JSR:
+
+```sh
+deno add @mrsamdev/domsure
+```
+
+JSR releases carry a SLSA provenance statement (build verified from this
+repo's source, recorded in the Sigstore transparency log). See
+[`PROVENANCE.md`](./PROVENANCE.md).
+
 ## API
 
 ```ts

@@ -1,3 +1,9 @@
+/**
+ * Dev-mode detection and warn-once dedup for `$.optional` / `$$.optional`.
+ *
+ * @module
+ */
+
 // process.env only — import.meta.env is ESM-only syntax and breaks
 // CJS builds at parse time (a try/catch cannot recover from a parse error).
 // Vite/Webpack replace process.env.NODE_ENV at build time, so keep it a
@@ -26,6 +32,13 @@ export function _setDevOverrideForTests(v: boolean | null): void {
   _override = v;
 }
 
+/**
+ * Returns `true` if running in development mode. Memoized at module load
+ * from `NODE_ENV`; test overrides via `_setDevOverrideForTests` take
+ * precedence.
+ *
+ * @returns `true` if `NODE_ENV` is not `"production"`.
+ */
 export function isDev(): boolean {
   return _override ?? IS_DEV;
 }
@@ -42,7 +55,12 @@ export function isDev(): boolean {
 const WARNED_CAP = 256;
 const warned = new Set<string>();
 
-/** Returns true if this call is the first warning for `selector`. */
+/**
+ * Returns `true` if this call is the first warning for `selector`.
+ *
+ * @param selector - The selector string to dedup warnings for.
+ * @returns `true` if this is the first warning, `false` if already warned.
+ */
 export function markWarned(selector: string): boolean {
   if (warned.has(selector)) return false;
   if (warned.size >= WARNED_CAP) warned.clear();
@@ -50,12 +68,28 @@ export function markWarned(selector: string): boolean {
   return true;
 }
 
-/** Public lifecycle hook: clears the warned-selector dedup set. */
+/**
+ * Clears the warned-selector dedup set so {@link $.optional} and
+ * {@link $$.optional} warn again for selectors that already fired one this
+ * session. Handy in long-lived SPAs after a route change, when previously
+ * missing elements reappear. Also the hook test suites use for isolation.
+ *
+ * @example
+ * ```ts
+ * import { resetWarnings } from "@mrsamdev/domsure";
+ *
+ * resetWarnings();
+ * ```
+ */
 export function resetWarnings(): void {
   warned.clear();
 }
 
-/** Test-only: exposes the current dedup-set size for assertions. */
+/**
+ * Test-only: exposes the current dedup-set size for assertions.
+ *
+ * @returns The number of selectors currently in the warned set.
+ */
 export function _warnedSizeForTests(): number {
   return warned.size;
 }
