@@ -1,6 +1,6 @@
 {
   "name": "@mrsamdev/domsure",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "exports": "./src/index.ts",
   "compilerOptions": {
     "lib": ["dom", "es2020", "deno.ns"]

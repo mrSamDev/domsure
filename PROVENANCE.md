@@ -23,7 +23,7 @@ log. No extra configuration is needed in this repo.
 ## Viewing the provenance statement
 
 Open the package page on JSR:
-[`@mrsamdev/domsure`](https://jsr.io/@mrsamdev/domsure). At the bottom of the
+[`domsure`](https://jsr.io/@mrsamdev/domsure). At the bottom of the
 **Overview** tab there is a **Provenance** section with a link to the Sigstore
 transparency log entry for that version.
 

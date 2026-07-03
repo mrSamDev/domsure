@@ -1,5 +1,11 @@
 # domsure
 
+[![npm version](https://img.shields.io/npm/v/domsure?logo=npm&label=npm)](https://www.npmjs.com/package/domsure)
+[![JSR version](https://img.shields.io/jsr/v/@mrsamdev/domsure?logo=deno&label=deno)](https://jsr.io/@mrsamdev/domsure)
+[![CI](https://github.com/mrsamdev/domsure/actions/workflows/ci.yml/badge.svg)](https://github.com/mrsamdev/domsure/actions/workflows/ci.yml)
+[![Publish to npm](https://github.com/mrsamdev/domsure/actions/workflows/publish-npm.yml/badge.svg)](https://github.com/mrsamdev/domsure/actions/workflows/publish-npm.yml)
+[![Publish to JSR](https://github.com/mrsamdev/domsure/actions/workflows/publish-jsr.yml/badge.svg)](https://github.com/mrsamdev/domsure/actions/workflows/publish-jsr.yml)
+
 > Replace your `!` assertions with real runtime checks.
 
 Six DOM query helpers under 1 KB gzipped. ESM and CJS. No dependencies.

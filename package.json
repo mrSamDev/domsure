@@ -1,6 +1,6 @@
 {
   "name": "domsure",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "packageManager": "pnpm@9.5.0",
   "description": "DOM query utilities — required/optional assertions, fast #id queries, and typed selector registries",
   "type": "module",

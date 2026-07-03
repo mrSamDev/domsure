@@ -32,7 +32,7 @@ contributors, not consumers.
 ## Install
 
 ```sh
-npm install @mrsamdev/domsure       # or: pnpm add domsure / yarn add domsure
+npm i domsure       # or: pnpm add domsure / yarn add domsure
 deno add @mrsamdev/domsure  # Deno / JSR
 ```
 
