@@ -9,7 +9,7 @@ Read this before editing source, tests, or docs.
 non-null assertions with real runtime checks and gives you branded errors,
 dev-only warn-once behavior, and a typed selector registry.
 
-- **Package:** `domsure` on npm, `@@mrsamdev/domsure` on JSR
+- **Package:** `domsure` on npm, `@mrsamdevdomsure` on JSR
 - **Runtime:** Browser only. Reads `document` directly. Throws `DomsureError`
   under SSR (where `document` is undefined) rather than failing silently.
 - **Targets:** ESM + CJS, ES2020, Node >= 18, Deno.

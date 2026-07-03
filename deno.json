@@ -1,5 +1,5 @@
 {
-  "name": "@@mrsamdev/domsure",
+  "name": "@mrsamdevdomsure",
   "version": "0.2.0",
   "exports": "./src/index.ts",
   "compilerOptions": {
