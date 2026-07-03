@@ -24,10 +24,12 @@ import { $, $$, defineSelectors, DomsureError, resetWarnings } from 'domsure';
 
 $(selector)          // HTMLElement | null   silent, fast #id path
 $.required(sel)      // HTMLElement          throws DomsureError if missing
+$.tryRequired(sel)   // [DomsureError|null, HTMLElement|null]  required, never throws
 $.optional(sel)      // HTMLElement | null   warns once in dev if missing
 $.exists(sel)        // boolean
 $$(selector)         // HTMLElement[]        querySelectorAll as a real Array
 $$.required(sel)     // HTMLElement[]        throws if zero match
+$$.tryRequired(sel)  // [DomsureError|null, HTMLElement[]]  required, never throws
 $$.optional(sel)     // HTMLElement[]        warns once in dev if zero match
 $$.exists(sel)       // boolean
 defineSelectors(s)   // Readonly typed registry, frozen
@@ -43,7 +45,7 @@ the tag — that's an intentional non-goal.
 | File | Responsibility | Lines |
 |---|---|---|
 | `src/index.ts` | Barrel re-exports only. No logic. | ~4 |
-| `src/query.ts` | `$` and `$$` plus `.required`/`.optional`/`.exists`. `#id` fast path via `getElementById`. | ~147 |
+| `src/query.ts` | `$` and `$$` plus `.required`/`.optional`/`.exists`/`.tryRequired`. `#id` fast path via `getElementById`. | ~394 |
 | `src/selectors.ts` | `defineSelectors` — frozen, typed registry. Dev-only validation rejects non-strings and duplicate selectors. | ~35 |
 | `src/env.ts` | `isDev()`, warn-once dedup (`markWarned`, `resetWarnings`), test-only overrides. | ~60 |
 | `src/errors.ts` | `DomsureError extends Error`, carries `selector`. | ~19 |

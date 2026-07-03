@@ -173,6 +173,90 @@ describe('$.exists (boolean check)', () => {
   });
 });
 
+describe('$.tryRequired (result tuple, never throws)', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="app"></div>';
+    resetWarnings();
+  });
+
+  it('returns [null, element] when found', () => {
+    const [err, el] = $.tryRequired<HTMLElement>('#app');
+    expect(err).toBeNull();
+    expect(el).not.toBeNull();
+    expect(el!.id).toBe('app');
+  });
+
+  it('returns [DomsureError, null] when missing', () => {
+    const [err, el] = $.tryRequired('#missing');
+    expect(el).toBeNull();
+    expect(err).toBeInstanceOf(DomsureError);
+    expect(err!.selector).toBe('#missing');
+    // Same message $.required would have thrown — monitoring parity.
+    expect(err!.message).toBe('[domsure] Required element not found: #missing');
+  });
+
+  it('never throws on a miss — the defining property', () => {
+    expect(() => $.tryRequired('#missing')).not.toThrow();
+  });
+
+  it('returns a rebranded error for an invalid selector, no throw', () => {
+    const [err, el] = $.tryRequired('#[');
+    expect(el).toBeNull();
+    expect(err).toBeInstanceOf(DomsureError);
+    expect(err!.message).toBe('[domsure] Invalid selector: "#["');
+    expect(() => $.tryRequired('#[')).not.toThrow();
+  });
+
+  it('returns [DomsureError, null] under SSR instead of throwing', () => {
+    vi.stubGlobal('document', undefined);
+    try {
+      const [err, el] = $.tryRequired('#x');
+      expect(el).toBeNull();
+      expect(err).toBeInstanceOf(DomsureError);
+      // Contrast: $.required throws under SSR, tryRequired returns the error.
+      expect(() => $.required('#x')).toThrow(DomsureError);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('does not auto-warn — the caller owns the error', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    $.tryRequired('#missing');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('returns the error tuple in production (no warn, no throw)', () => {
+    _setDevOverrideForTests(false);
+    try {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const [err, el] = $.tryRequired('#missing');
+      expect(el).toBeNull();
+      expect(err).toBeInstanceOf(DomsureError);
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    } finally {
+      _setDevOverrideForTests(null);
+    }
+  });
+
+  it('handles compound # selectors', () => {
+    document.body.innerHTML =
+      '<div id="app" class="active"><span class="item">a</span></div>';
+    const [err, el] = $.tryRequired('#app .item');
+    expect(err).toBeNull();
+    expect(el!.textContent).toBe('a');
+  });
+
+  it('works with numeric IDs', () => {
+    document.body.innerHTML = '<div id="123"></div>';
+    const [err, el] = $.tryRequired<HTMLDivElement>('#123');
+    expect(err).toBeNull();
+    expect(el!.id).toBe('123');
+  });
+});
+
 describe('$$ (multi query)', () => {
   beforeEach(() => {
     document.body.innerHTML = '<div id="app"><span class="item">a</span><span class="item">b</span></div>';
@@ -214,6 +298,40 @@ describe('$$ parity', () => {
   it('$$$.exists mirrors $.exists semantics', () => {
     expect($$.exists('.item')).toBe(true);
     expect($$.exists('.missing')).toBe(false);
+  });
+
+  it('$$.tryRequired returns [null, els] when found', () => {
+    const [err, els] = ($$.tryRequired as typeof $$.tryRequired)('.item');
+    expect(err).toBeNull();
+    expect(els).toHaveLength(2);
+    expect(els[0].textContent).toBe('a');
+  });
+
+  it('$$.tryRequired returns [DomsureError, []] on empty, no throw', () => {
+    const [err, els] = $$.tryRequired('.missing');
+    expect(els).toEqual([]);
+    expect(err).toBeInstanceOf(DomsureError);
+    expect(err!.selector).toBe('.missing');
+    expect(err!.message).toBe('[domsure] Required elements not found: .missing');
+    expect(() => $$.tryRequired('.missing')).not.toThrow();
+  });
+
+  it('$$.tryRequired never throws under SSR', () => {
+    vi.stubGlobal('document', undefined);
+    try {
+      const [err, els] = $$.tryRequired('.x');
+      expect(els).toEqual([]);
+      expect(err).toBeInstanceOf(DomsureError);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('$$.tryRequired does not auto-warn', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    $$.tryRequired('.missing');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('$$.required rebrands invalid selectors', () => {

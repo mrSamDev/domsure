@@ -49,6 +49,9 @@ Run this when the user asks to migrate existing raw-DOM code.
      null check
 2. **Classify each call site** by what the code does on a missing element:
    - *Crashes / must exist* → `$.required` / `$$.required`
+   - *Must exist but a throw is unrecoverable* (React `useEffect`/
+     `useLayoutEffect`, event handler with no `try/catch`) →
+     `$.tryRequired` / `$$.tryRequired` — returns `[error, value]`,
    - *Tolerates missing, but you want a dev warning* → `$.optional` /
      `$$.optional`
    - *Branches on presence* → `$.exists` / `$$.exists`
@@ -81,6 +84,7 @@ Run this when the user asks to migrate existing raw-DOM code.
 | `if (document.querySelector('#x')) { … }` | `if ($.exists('#x')) { … }` |
 | `document.querySelectorAll('.row').length > 0` | `$$.exists('.row')` |
 | `document.querySelectorAll('.row')` + throw if empty | `$$.required('.row')` |
+| `$.required(sel)` in `useEffect` / throw-unsafe context | `$.tryRequired(sel)` |
 
 Simple `#id` selectors hit `getElementById` internally (faster). Compound
 selectors like `#app .item` or `#nav.active` fall through to
@@ -182,6 +186,12 @@ surface.
    as `string` and you lose the literal-type benefit.
 8. **Adding a redundant null check after `$.required`.** It throws on
    missing — `if (!el) return` after it is dead code.
+9. **Using `$.required` inside `useEffect` / `useLayoutEffect`.** React error
+   boundaries do not catch throws from effects — the throw bypasses the
+   boundary and crashes the page. Use `$.tryRequired` instead: it returns a
+   `[error, element]` tuple and never throws, so the effect can degrade.
+   After it, a null guard on the element is *not* dead code — it's the
+   degrade path the tuple feeds.
 
 ## Where to look for truth
 
