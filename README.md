@@ -59,7 +59,7 @@ resetWarnings()    // void               - clear the warn-once dedup set
 
 ### `$`
 
-Silent single-element query. Simple `#id` selectors hit `getElementById` because it's faster; everything else, including compound selectors like `#app .item` or `#nav.active`, falls through to `querySelector`. Never warns.
+Silent single-element query. Simple `#id` selectors use `getElementById`; everything else, including compound selectors like `#app .item` or `#nav.active`, falls through to `querySelector`. Never warns.
 
 ```ts
 const modal = $('#modal');        // HTMLElement | null
@@ -134,8 +134,11 @@ S.navbar;  // typed as "#navbar", not string
 
 Clears the warn-once dedup set so `$.optional` and `$$.optional` warn again for selectors that already fired one this session. Handy in long-lived SPAs after a route change, when previously missing elements reappear. It's also the hook test suites use for isolation.
 
+Pass a namespace to scope the reset to one app in a multi-app / micro-frontend bundle. Omit the argument to clear all namespaces.
+
 ```ts
-resetWarnings();
+resetWarnings();            // clear all
+resetWarnings('app-shell'); // clear only the app-shell namespace
 ```
 
 ### `DomsureError`
@@ -168,6 +171,22 @@ domsure reads `document` directly. Under SSR, where `document` is undefined, `$`
 if (typeof window !== 'undefined') {
   const el = $.required('#app');
 }
+```
+
+### Deno production mode
+
+On Deno, `NODE_ENV` is not set by default, so the library runs in dev mode
+(warnings enabled, `defineSelectors` validation active). To opt into
+production mode, set the environment variable before importing:
+
+```ts
+Deno.env.set('NODE_ENV', 'production');
+```
+
+Or pass it at the command line:
+
+```sh
+NODE_ENV=production deno run main.ts
 ```
 
 ## Size

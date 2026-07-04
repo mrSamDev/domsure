@@ -12,7 +12,7 @@ import { invalidSelectorError, ssrError } from './errors.ts';
 // Compound selectors like `#app .item`, `#app.active`, `#nav > li` MUST fall
 // through to querySelector — getElementById('app .item') silently returns null.
 // Allows underscore-leading IDs (#_x) — CSS permits them, so querySelector
-// would work too, but getElementById is still the faster path.
+// would work too, but getElementById is still the correct path.
 const SIMPLE_ID = /^#[A-Za-z_][\w-]*$/;
 
 // Matches a pure ID selector — `#` followed by an ID value with no CSS
@@ -73,7 +73,7 @@ export function safeQueryAll<T extends Element>(
  * Single internal query core. All public single-element functions delegate
  * here, and `$$.exists` reuses it to avoid allocating an array.
  *
- * Simple `#id` selectors use `getElementById` (faster than `querySelector`).
+ * Simple `#id` selectors use `getElementById`.
  * Pure IDs that are CSS-invalid as unescaped identifiers (e.g. `#123`) try
  * `querySelector` first and fall back to `getElementById` on DOMException.
  * Everything else goes through `querySelector` via `safeQuery`.

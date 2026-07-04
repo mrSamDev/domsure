@@ -31,7 +31,7 @@ import { $, $$, defineSelectors, DomsureError, resetWarnings } from 'domsure';
 const el = $('#modal');              // HTMLElement | null
 ```
 
-Simple `#id` selectors use `getElementById` (faster). Compound selectors
+Simple `#id` selectors use `getElementById`. Compound selectors
 like `#app .item` or `#nav.active` fall through to `querySelector`. Never
 warns. Returns `null` if missing — that's intentional.
 
@@ -114,10 +114,14 @@ typo). Production builds strip the validation.
 ### `resetWarnings` — clear the warn-once dedup set
 
 ```ts
-resetWarnings();
+resetWarnings();            // clear all namespaces
+resetWarnings('app-shell'); // clear only the app-shell namespace
 ```
 
 Call after a route change in long-lived SPAs, or between tests for isolation.
+
+Pass a namespace string to scope the reset to one app in a multi-app /
+micro-frontend bundle. Omit the argument to clear all namespaces.
 
 ### `DomsureError` — branded error
 
@@ -198,6 +202,23 @@ Zero runtime dependencies. `sideEffects: false` so bundlers can tree-shake.
 
 Node >= 18. ES2020 target. Works in any modern browser, Deno, and bundlers
 (Vite, webpack, Rollup, esbuild).
+
+### Deno production mode
+
+On Deno, `NODE_ENV` is not set by default, so the library runs in dev mode
+(warnings enabled, `defineSelectors` validation active). To opt into
+production mode, set the environment variable before importing:
+
+```ts
+Deno.env.set('NODE_ENV', 'production');
+// … then import domsure
+```
+
+Or pass it at the command line:
+
+```sh
+NODE_ENV=production deno run main.ts
+```
 
 ## License
 

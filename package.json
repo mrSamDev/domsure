@@ -2,7 +2,7 @@
   "name": "domsure",
   "version": "0.4.0",
   "packageManager": "pnpm@9.5.0",
-  "description": "DOM query utilities — required/optional assertions, fast #id queries, and typed selector registries",
+  "description": "DOM query utilities — required/optional assertions, typed selector registries, and #id queries via getElementById",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,9 +21,7 @@
     "dist"
   ],
   "sideEffects": false,
-  "engines": {
-    "node": ">=18"
-  },
+  "browser": "./dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mrSamDev/domsure.git"

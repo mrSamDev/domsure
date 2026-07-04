@@ -56,3 +56,30 @@ describe('error factories', () => {
     expect(e.message).toContain('"b"');
   });
 });
+
+describe('DomsureError cross-realm instanceof', () => {
+  it('matches by .name duck-type, not constructor identity', () => {
+    // Simulate a cross-realm error: same shape, different constructor.
+    const fake = { name: 'DomsureError', message: 'test', selector: '#x' };
+    expect((fake as unknown) instanceof DomsureError).toBe(true);
+  });
+
+  it('rejects objects without the DomsureError name', () => {
+    expect(({ name: 'Error', message: 'test' } as unknown) instanceof DomsureError).toBe(false);
+    expect(({ name: 'TypeError' } as unknown) instanceof DomsureError).toBe(false);
+    expect(({} as unknown) instanceof DomsureError).toBe(false);
+  });
+
+  it('rejects non-objects', () => {
+    expect((null as unknown) instanceof DomsureError).toBe(false);
+    expect((undefined as unknown) instanceof DomsureError).toBe(false);
+    expect(('DomsureError' as unknown) instanceof DomsureError).toBe(false);
+    expect((42 as unknown) instanceof DomsureError).toBe(false);
+  });
+
+  it('real DomsureError instances still pass instanceof', () => {
+    const e = requiredNotFoundError('#app');
+    expect(e instanceof DomsureError).toBe(true);
+    expect(e instanceof Error).toBe(true);
+  });
+});

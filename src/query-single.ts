@@ -130,8 +130,7 @@ interface QueryFn {
   /**
    * Single-element DOM query. Returns the first match or `null`.
    *
-   * Simple `#id` selectors use `getElementById` (faster than
-   * `querySelector`). Compound selectors like `#app .item` or `#nav.active`
+   * Simple `#id` selectors use `getElementById`. Compound selectors like `#app .item` or `#nav.active`
    * fall through to `querySelector`. Never warns.
    *
    * @template T - Narrows the return type. A cast, not tag inference.
@@ -155,7 +154,7 @@ interface QueryFn {
 /**
  * Single-element DOM query. Returns the first match or `null`.
  *
- * Simple `#id` selectors use `getElementById` (faster than `querySelector`).
+ * Simple `#id` selectors use `getElementById`.
  * Compound selectors like `#app .item` or `#nav.active` fall through to
  * `querySelector`. Never warns — use `.optional` for dev warnings or
  * `.required` to throw on a miss.

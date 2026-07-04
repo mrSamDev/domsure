@@ -86,7 +86,7 @@ Run this when the user asks to migrate existing raw-DOM code.
 | `document.querySelectorAll('.row')` + throw if empty | `$$.required('.row')` |
 | `$.required(sel)` in `useEffect` / throw-unsafe context | `$.tryRequired(sel)` |
 
-Simple `#id` selectors hit `getElementById` internally (faster). Compound
+Simple `#id` selectors use `getElementById` internally. Compound
 selectors like `#app .item` or `#nav.active` fall through to
 `querySelector`. You don't choose the path — pass the selector as-is.
 
@@ -121,11 +121,12 @@ quiet. In long-lived SPAs, a previously-missing element may reappear after
 a route change but never warn again because it's already in the dedup set.
 
 Call `resetWarnings()` on route change (or wherever the DOM is
-substantially rebuilt) so the warn-once set clears:
+substantially rebuilt) so the warn-once set clears. In multi-app /
+micro-frontend bundles, pass a namespace to scope the reset:
 
 ```ts
 router.on('change', () => {
-  resetWarnings();
+  resetWarnings('app-shell'); // clear only this app's dedup
 });
 ```
 

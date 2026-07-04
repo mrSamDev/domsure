@@ -36,6 +36,8 @@ jobs:
         run: "! grep -n '<you>\\|<owner>\\|<repo>' package.json"
       - name: Verify changelog has an Unreleased section
         run: grep -q '## \[Unreleased\]' CHANGELOG.md
+      - name: Verify changelog documents current version
+        run: grep -q "## \[$(node -p "require('./package.json').version")\]" CHANGELOG.md
       - name: Verify release tag
         run: |
           if ! git describe --tags --exact-match HEAD >/dev/null 2>&1; then
