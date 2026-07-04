@@ -49,7 +49,7 @@ the tag — that's an intentional non-goal.
 | `src/query-single.ts` | `$` plus `.required`/`.optional`/`.exists`/`.tryRequired`. | ~135 |
 | `src/query-multi.ts` | `$$` plus `.required`/`.optional`/`.exists`/`.tryRequired`. | ~130 |
 | `src/selectors.ts` | `defineSelectors` — frozen, typed registry. Dev-only validation rejects non-strings and duplicate selectors. | ~55 |
-| `src/env.ts` | `isDev()`, warn-once dedup (`markWarned`, `resetWarnings`), test-only overrides. Namespace-scoped dedup sets (cap 256 per namespace). | ~110 |
+| `src/env.ts` | `isDev()`, warn-once dedup (`markWarned`, `resetWarnings`), test-only overrides. Bounded dedup set (cap 256). | ~95 |
 | `src/errors.ts` | `DomsureError extends Error`, carries `selector`. Centralized error message factories. Cross-realm `instanceof` via `Symbol.hasInstance`. | ~70 |
 | `src/types.ts` | `SelectorSchema`, `SelectorMap<T>`, `RequiredResult<T>`. | ~35 |
 

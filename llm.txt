@@ -114,14 +114,14 @@ typo). Production builds strip the validation.
 ### `resetWarnings` — clear the warn-once dedup set
 
 ```ts
-resetWarnings();            // clear all namespaces
-resetWarnings('app-shell'); // clear only the app-shell namespace
+resetWarnings();
 ```
 
 Call after a route change in long-lived SPAs, or between tests for isolation.
 
-Pass a namespace string to scope the reset to one app in a multi-app /
-micro-frontend bundle. Omit the argument to clear all namespaces.
+The optional `namespace` parameter is a forward-compat stub — it is currently
+ignored. The dedup set is a module-level singleton. For multi-app bundle
+isolation today, scope your own `$`/`$$` wrappers per app.
 
 ### `DomsureError` — branded error
 

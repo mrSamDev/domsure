@@ -48,29 +48,6 @@ describe('warned lifecycle', () => {
     expect(markWarned('#a')).toBe(true); // warns again after reset
   });
 
-  it('resetWarnings(namespace) clears only that namespace', () => {
-    // Default namespace (markWarned always uses '').
-    markWarned('#a');
-    markWarned('#b');
-    expect(_warnedSizeForTests()).toBe(2);
-    // Clearing a different namespace leaves the default untouched.
-    resetWarnings('other');
-    expect(_warnedSizeForTests()).toBe(2);
-    // Clearing the default namespace works.
-    resetWarnings('');
-    expect(_warnedSizeForTests()).toBe(0);
-  });
-
-  it('resetWarnings() with no arg clears all namespaces', () => {
-    markWarned('#a');
-    // Simulate another namespace by calling resetWarnings with it first
-    // (getWarned creates the Set on first access). We can't easily write
-    // to another namespace without a public API, but resetWarnings()
-    // clearing all is the contract we test.
-    resetWarnings();
-    expect(_warnedSizeForTests()).toBe(0);
-  });
-
   it('caps at WARNED_CAP without throwing', () => {
     for (let i = 0; i < 300; i++) markWarned(`#s${i}`);
     expect(_warnedSizeForTests()).toBeLessThanOrEqual(256);

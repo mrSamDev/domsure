@@ -50,12 +50,7 @@ export function isDev(): boolean {
 // Selectors that already warned this session. Keeps $.optional quiet after
 // the first miss per selector — avoids spamming React/Vue re-renders.
 //
-// Namespace-scoped so multi-app / micro-frontend bundles can isolate their
-// dedup sets. The default namespace is ''; pass a namespace string to
-// resetWarnings() to clear only that namespace, or omit the argument to
-// clear all namespaces.
-//
-// Bounded (cap 256 per namespace) so a long-lived SPA with dynamic selectors
+// Bounded (cap 256) so a long-lived SPA with dynamic selectors
 // (`#cell-${row}-${col}` over a virtualized grid) cannot leak indefinitely.
 // 256 is far above any realistic distinct-selector count for a single page.
 // On overflow we do NOT clear: clearing would re-arm every previously-quiet
@@ -64,16 +59,7 @@ export function isDev(): boolean {
 // unavoidable cost of exceeding the cap) while the 256 already-seen selectors
 // stay quiet. Overflow noise is contained to new selectors only.
 const WARNED_CAP = 256;
-const warned = new Map<string, Set<string>>();
-
-function getWarned(namespace: string): Set<string> {
-  let s = warned.get(namespace);
-  if (!s) {
-    s = new Set<string>();
-    warned.set(namespace, s);
-  }
-  return s;
-}
+const warned = new Set<string>();
 
 /**
  * Returns `true` if this call is the first warning for `selector`.
@@ -82,14 +68,13 @@ function getWarned(namespace: string): Set<string> {
  * @returns `true` if this is the first warning, `false` if already warned.
  */
 export function markWarned(selector: string): boolean {
-  const s = getWarned('');
-  if (s.has(selector)) return false;
+  if (warned.has(selector)) return false;
   // Cap reached: keep existing dedup intact, don't add. The new selector
   // warns this call (and on future calls, since we can't track it without
   // exceeding the cap) — but the 256 selectors already seen stay quiet.
   // This contains overflow noise to new selectors instead of re-warning all.
-  if (s.size >= WARNED_CAP) return true;
-  s.add(selector);
+  if (warned.size >= WARNED_CAP) return true;
+  warned.add(selector);
   return true;
 }
 
@@ -99,33 +84,25 @@ export function markWarned(selector: string): boolean {
  * session. Handy in long-lived SPAs after a route change, when previously
  * missing elements reappear. Also the hook test suites use for isolation.
  *
- * Pass a namespace to clear only that namespace's dedup set (for multi-app /
- * micro-frontend bundles). Omit the argument to clear all namespaces.
- *
- * @param namespace - Optional namespace to clear. If omitted, clears all.
+ * The dedup set is a module-level singleton. For multi-app bundle isolation,
+ * scope your own `$`/`$$` wrappers per app.
  *
  * @example
  * ```ts
  * import { resetWarnings } from "@mrsamdev/domsure";
  *
- * resetWarnings();           // clear all
- * resetWarnings('app-shell'); // clear only the app-shell namespace
+ * resetWarnings();
  * ```
  */
-export function resetWarnings(namespace?: string): void {
-  if (namespace === undefined) {
-    warned.clear();
-  } else {
-    warned.delete(namespace);
-  }
+export function resetWarnings(): void {
+  warned.clear();
 }
 
 /**
  * Test-only: exposes the current dedup-set size for assertions.
  *
- * @param namespace - The namespace to check (default '').
  * @returns The number of selectors currently in the warned set.
  */
-export function _warnedSizeForTests(namespace = ''): number {
-  return warned.get(namespace)?.size ?? 0;
+export function _warnedSizeForTests(): number {
+  return warned.size;
 }

@@ -48,7 +48,7 @@ export class DomsureError extends Error {
    * guard (`e instanceof DomsureError`) working when the error was thrown in
    * an iframe and caught in the parent.
    */
-  static [Symbol.hasInstance](instance: unknown): boolean {
+  static override [Symbol.hasInstance](instance: unknown): boolean {
     return typeof instance === 'object' && instance !== null &&
       (instance as Error).name === 'DomsureError';
   }

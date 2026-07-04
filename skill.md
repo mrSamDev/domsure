@@ -121,12 +121,11 @@ quiet. In long-lived SPAs, a previously-missing element may reappear after
 a route change but never warn again because it's already in the dedup set.
 
 Call `resetWarnings()` on route change (or wherever the DOM is
-substantially rebuilt) so the warn-once set clears. In multi-app /
-micro-frontend bundles, pass a namespace to scope the reset:
+substantially rebuilt) so the warn-once set clears:
 
 ```ts
 router.on('change', () => {
-  resetWarnings('app-shell'); // clear only this app's dedup
+  resetWarnings();
 });
 ```
 

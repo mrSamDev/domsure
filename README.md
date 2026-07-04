@@ -134,11 +134,10 @@ S.navbar;  // typed as "#navbar", not string
 
 Clears the warn-once dedup set so `$.optional` and `$$.optional` warn again for selectors that already fired one this session. Handy in long-lived SPAs after a route change, when previously missing elements reappear. It's also the hook test suites use for isolation.
 
-Pass a namespace to scope the reset to one app in a multi-app / micro-frontend bundle. Omit the argument to clear all namespaces.
+The optional `namespace` parameter is a forward-compat stub (currently ignored). The dedup set is a module-level singleton — for multi-app bundle isolation, scope your own `$`/`$$` wrappers per app.
 
 ```ts
-resetWarnings();            // clear all
-resetWarnings('app-shell'); // clear only the app-shell namespace
+resetWarnings();
 ```
 
 ### `DomsureError`
