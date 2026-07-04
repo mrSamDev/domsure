@@ -33,6 +33,77 @@ describe('invalid selectors', () => {
   });
 });
 
+describe('non-DOMException errors rethrow, not rebranded', () => {
+  // safeQuery/safeQueryAll narrow to DOMException: a DOMException from an
+  // invalid selector is branded DomsureError, but any other throw (a real bug
+  // — e.g. a TypeError from a corrupted document) must escape unrebranded
+  // instead of being mislabeled "Invalid selector". Same principle as the
+  // tryRequired guard. Stub the DOM method to throw a foreign error.
+
+  it('$ rethrows a non-DOMException from querySelector (not DomsureError)', () => {
+    document.body.innerHTML = '<div id="app"><span class="item"></span></div>';
+    const boom = new TypeError('corrupted document');
+    // Non-ID selector → goes through safeQuery's catch.
+    const spy = vi.spyOn(document, 'querySelector').mockImplementation(() => {
+      throw boom;
+    });
+    try {
+      expect(() => $('.item')).toThrow(TypeError);
+      expect(() => $('.item')).toThrow('corrupted document');
+      // Confirm it is NOT rebranded as DomsureError.
+      try {
+        $('.item');
+      } catch (e) {
+        expect(e).not.toBeInstanceOf(DomsureError);
+      }
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('$$ rethrows a non-DOMException from querySelectorAll (not DomsureError)', () => {
+    document.body.innerHTML = '<div id="app"><span class="item"></span></div>';
+    const boom = new TypeError('corrupted document');
+    const spy = vi.spyOn(document, 'querySelectorAll').mockImplementation(() => {
+      throw boom;
+    });
+    try {
+      expect(() => $$('.item')).toThrow(TypeError);
+      expect(() => $$('.item')).toThrow('corrupted document');
+      try {
+        $$('.item');
+      } catch (e) {
+        expect(e).not.toBeInstanceOf(DomsureError);
+      }
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('$ rethrows a non-DOMException from the PURE_ID rescue path', () => {
+    // #123 is PURE_ID: querySelector is tried first. If it throws a foreign
+    // (non-DOMException) error, the rescue catch must rethrow it rather than
+    // silently fall back to getElementById (which could mask a real bug as a
+    // null miss). Brand only DOMException.
+    document.body.innerHTML = '<div id="123"></div>';
+    const boom = new TypeError('engine bug');
+    const spy = vi.spyOn(document, 'querySelector').mockImplementation(() => {
+      throw boom;
+    });
+    try {
+      expect(() => $('#123')).toThrow(TypeError);
+      expect(() => $('#123')).toThrow('engine bug');
+      try {
+        $('#123');
+      } catch (e) {
+        expect(e).not.toBeInstanceOf(DomsureError);
+      }
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
 describe('SSR guard', () => {
   it('throws DomsureError when document is undefined', () => {
     vi.stubGlobal('document', undefined);

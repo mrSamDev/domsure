@@ -52,4 +52,25 @@ describe('warned lifecycle', () => {
     for (let i = 0; i < 300; i++) markWarned(`#s${i}`);
     expect(_warnedSizeForTests()).toBeLessThanOrEqual(256);
   });
+
+  it('does NOT clear on overflow — existing selectors stay quiet', () => {
+    // Fill to the cap. Previously the cap triggered a full warned.clear(),
+    // re-arming every previously-quiet selector and causing a warning storm.
+    // The new policy keeps existing dedup intact: capped selectors return
+    // false (quiet), only overflow selectors warn (return true every call).
+    for (let i = 0; i < 256; i++) markWarned(`#s${i}`);
+    expect(_warnedSizeForTests()).toBe(256);
+
+    // An already-warned selector stays quiet — not re-armed by overflow.
+    expect(markWarned('#s0')).toBe(false);
+    expect(markWarned('#s255')).toBe(false);
+    expect(_warnedSizeForTests()).toBe(256); // nothing added
+
+    // An overflow selector warns (returns true) but is not tracked.
+    expect(markWarned('#overflow')).toBe(true);
+    expect(_warnedSizeForTests()).toBe(256); // cap held, no clear
+
+    // The overflow selector warns again on the next call (not tracked).
+    expect(markWarned('#overflow')).toBe(true);
+  });
 });

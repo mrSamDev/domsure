@@ -255,4 +255,25 @@ describe('$.tryRequired (result tuple, never throws)', () => {
     expect(err).toBeNull();
     expect(el!.id).toBe('123');
   });
+
+  it('rethrows a non-DomsureError failure instead of rebranding it', () => {
+    // Defense-in-depth guard: tryRequired converts DomsureError throws into
+    // tuples, but a foreign (non-Domsure) throw must escape — never be silently
+    // rebranded as a DomsureError. We exercise this via the PURE_ID path
+    // (#123): querySelector throws DOMException (caught by the inner fallback),
+    // then getElementById is called *unwrapped* by safeQuery. Stubbing it to
+    // throw a foreign TypeError propagates raw out of query() into tryRequired,
+    // which must rethrow it rather than returning [TypeError-as-Domsure, null].
+    document.body.innerHTML = '<div id="123"></div>';
+    const boom = new TypeError('engine bug');
+    const spy = vi.spyOn(document, 'getElementById').mockImplementation(() => {
+      throw boom;
+    });
+    try {
+      expect(() => $.tryRequired('#123')).toThrow(TypeError);
+      expect(() => $.tryRequired('#123')).toThrow('engine bug');
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });

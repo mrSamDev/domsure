@@ -9,7 +9,7 @@ Read this before editing source, tests, or docs.
 non-null assertions with real runtime checks and gives you branded errors,
 dev-only warn-once behavior, and a typed selector registry.
 
-- **Package:** `domsure` on npm, `@mrsamdevdomsure` on JSR
+- **Package:** `domsure` on npm, `@mrsamdev/domsure` on JSR
 - **Runtime:** Browser only. Reads `document` directly. Throws `DomsureError`
   under SSR (where `document` is undefined) rather than failing silently.
 - **Targets:** ESM + CJS, ES2020, Node >= 18, Deno.
@@ -44,12 +44,14 @@ the tag — that's an intentional non-goal.
 
 | File | Responsibility | Lines |
 |---|---|---|
-| `src/index.ts` | Barrel re-exports only. No logic. | ~4 |
-| `src/query.ts` | `$` and `$$` plus `.required`/`.optional`/`.exists`/`.tryRequired`. `#id` fast path via `getElementById`. | ~394 |
-| `src/selectors.ts` | `defineSelectors` — frozen, typed registry. Dev-only validation rejects non-strings and duplicate selectors. | ~35 |
-| `src/env.ts` | `isDev()`, warn-once dedup (`markWarned`, `resetWarnings`), test-only overrides. | ~60 |
-| `src/errors.ts` | `DomsureError extends Error`, carries `selector`. | ~19 |
-| `src/types.ts` | `SelectorSchema`, `SelectorMap<T>`. | ~4 |
+| `src/index.ts` | Barrel re-exports only. No logic. | ~40 |
+| `src/query-core.ts` | Shared query internals: `assertBrowser()` SSR guard, `safeQuery`/`safeQueryAll` DOMException branding, single-element `query()` core with `#id` fast path and numeric-ID rescue. | ~95 |
+| `src/query-single.ts` | `$` plus `.required`/`.optional`/`.exists`/`.tryRequired`. | ~135 |
+| `src/query-multi.ts` | `$$` plus `.required`/`.optional`/`.exists`/`.tryRequired`. | ~130 |
+| `src/selectors.ts` | `defineSelectors` — frozen, typed registry. Dev-only validation rejects non-strings and duplicate selectors. | ~55 |
+| `src/env.ts` | `isDev()`, warn-once dedup (`markWarned`, `resetWarnings`), test-only overrides. Bounded dedup set (cap 256). | ~90 |
+| `src/errors.ts` | `DomsureError extends Error`, carries `selector`. Centralized error message factories. | ~55 |
+| `src/types.ts` | `SelectorSchema`, `SelectorMap<T>`, `RequiredResult<T>`. | ~35 |
 
 Tests mirror source one-to-one in `test/`, run under jsdom via Vitest.
 

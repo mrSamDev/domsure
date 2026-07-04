@@ -26,8 +26,12 @@ follows [Semantic Versioning](https://semver.org/). Dates are ISO 8601.
 - `isDev()` memoized at module load (#7)
 - Build output minified; sourcemaps no longer shipped (#1)
 ### Fixed
-- `warned` Set bounded (cap 256) to prevent unbounded growth (#2)
-- `package.json` placeholder `<you>` URLs replaced (#9)
+- `$.tryRequired` / `$$.tryRequired` now rethrow any non-`DomsureError` failure instead of silently rebranding it via an unchecked cast. `required()` and `multiQuery()` only ever throw `DomsureError` today, so this is defense-in-depth against future code paths or exotic engine quirks — never swallow an unknown failure (#review).
+- Warn-once dedup no longer clears the whole set on overflow. Hitting the 256-selector cap previously called `warned.clear()`, re-arming every previously-quiet selector and causing a periodic warning storm. Now existing dedup stays intact and only overflow selectors warn — noise is contained to new selectors instead of re-warning all (#review).
+- `project.md` source map updated to the actual three-file query structure (`query-core.ts` / `query-single.ts` / `query-multi.ts`) and corrected line counts; fixed `@mrsamdevdomsure` → `@mrsamdev/domsure` JSR package name typo (#review).
+- Root `.gitignore` orphaned comment ("# the exact published bytes from main.") fixed to describe `dist/` specifically; added a clarifying comment for the `.deepsec/` ignore entry. Stale local deepsec scan output (runs/reports/files/project.json — regeneratable, never tracked) removed from disk (#review).
+- `publish-npm.yml` no longer passes `--no-git-checks`. `dist/` is gitignored so the working tree stays clean, and the tag-verification gate already proves a tagged release — the published artifact is now byte-reproducible from the tag, matching the SLSA provenance claim in `PROVENANCE.md` (#review).
+- `safeQuery` / `safeQueryAll` / the PURE-ID rescue in `query-core.ts` now narrow their `catch` to `DOMException`: invalid-selector errors are still branded `DomsureError`, but any non-DOM throw (a real bug, e.g. a `TypeError` from a corrupted document) is rethrown instead of being mislabeled "Invalid selector". Consistent with the `tryRequired` guard above — never swallow an unknown failure (#review).
 
 ## [0.1.0] - 2026-07-03
 - `$` — silent single-element query. `#id` fast path via `getElementById` (simple IDs only; compound selectors fall through to `querySelector`).

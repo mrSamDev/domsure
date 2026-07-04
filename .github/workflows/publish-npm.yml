@@ -46,6 +46,11 @@ jobs:
           TAG="$(git describe --tags --exact-match HEAD)"
           echo "Publishing from tag: $TAG"
       - name: Publish
-        run: pnpm publish --access public --provenance --no-git-checks
+        # No --no-git-checks: dist/ is gitignored, so the working tree stays
+        # clean and pnpm's git verification passes. The tag-verification step
+        # above already proved HEAD is an exact version tag, so the published
+        # artifact is byte-reproducible from the tag — which is what the SLSA
+        # provenance attestation in PROVENANCE.md claims.
+        run: pnpm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

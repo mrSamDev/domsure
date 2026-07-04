@@ -76,10 +76,12 @@ function tryRequired<T extends Element = HTMLElement>(
   try {
     return [null, required<T>(selector)];
   } catch (e) {
-    // required() only ever throws DomsureError (not-found, invalid selector,
-    // SSR). The cast is safe; the catch exists to convert the throw into a
-    // tuple value, not to defend against a non-DomsureError.
-    return [e as DomsureError, null];
+    // required() only throws DomsureError (not-found, invalid selector, SSR).
+    // Guard the type rather than casting: if a future code path or an exotic
+    // engine ever throws something else, rethrow it instead of silently
+    // rebranding it as DomsureError — never swallow an unknown failure.
+    if (e instanceof DomsureError) return [e, null];
+    throw e;
   }
 }
 
