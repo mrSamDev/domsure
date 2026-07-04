@@ -17,21 +17,15 @@
  */
 
 import { isDev, markWarned } from './env.ts';
-import { DomsureError } from './errors.ts';
-import { query, ssrError } from './query-core.ts';
+import { DomsureError, requiredMultiNotFoundError } from './errors.ts';
+import { query, assertBrowser, safeQueryAll } from './query-core.ts';
 import type { RequiredResult } from './types.ts';
 
 // Multi-element internal query core. All public multi-element functions
 // delegate here.
-function multiQuery<T extends HTMLElement = HTMLElement>(selector: string): T[] {
-  if (typeof document === 'undefined') {
-    throw ssrError();
-  }
-  try {
-    return Array.from(document.querySelectorAll<T>(selector));
-  } catch {
-    throw new DomsureError(`[domsure] Invalid selector: ${JSON.stringify(selector)}`, selector);
-  }
+function multiQuery<T extends Element = HTMLElement>(selector: string): T[] {
+  assertBrowser();
+  return safeQueryAll(() => document.querySelectorAll<T>(selector), selector);
 }
 
 /**
@@ -49,10 +43,10 @@ function multiQuery<T extends HTMLElement = HTMLElement>(selector: string): T[] 
  * const rows = $$.required(".row"); // throws if zero rows match
  * ```
  */
-function requiredMulti<T extends HTMLElement = HTMLElement>(selector: string): T[] {
+function requiredMulti<T extends Element = HTMLElement>(selector: string): T[] {
   const els = multiQuery<T>(selector);
   if (els.length === 0) {
-    throw new DomsureError(`[domsure] Required elements not found: ${selector}`, selector);
+    throw requiredMultiNotFoundError(selector);
   }
   return els;
 }
@@ -78,7 +72,7 @@ function requiredMulti<T extends HTMLElement = HTMLElement>(selector: string): T
  * rows.forEach(r => r.classList.add('active'));
  * ```
  */
-function tryRequiredMulti<T extends HTMLElement = HTMLElement>(
+function tryRequiredMulti<T extends Element = HTMLElement>(
   selector: string,
 ): RequiredResult<T[]> {
   try {
@@ -104,7 +98,7 @@ function tryRequiredMulti<T extends HTMLElement = HTMLElement>(
  * const rows = $$.optional(".row"); // warns once in dev if zero match
  * ```
  */
-function optionalMulti<T extends HTMLElement = HTMLElement>(selector: string): T[] {
+function optionalMulti<T extends Element = HTMLElement>(selector: string): T[] {
   const els = multiQuery<T>(selector);
   if (els.length === 0 && isDev() && markWarned(selector)) {
     console.warn(`[domsure] No elements found: ${selector}`);
@@ -131,7 +125,7 @@ function existsMulti(selector: string): boolean {
   // know if any element matches. Delegate to query() (which handles SSR
   // guards, error branding, and the ID fast path) instead of allocating an
   // array via multiQuery().length > 0.
-  return query<HTMLElement>(selector) !== null;
+  return query<Element>(selector) !== null;
 }
 
 interface MultiQueryFn {
@@ -145,7 +139,7 @@ interface MultiQueryFn {
    * @throws {DomsureError} If the selector is invalid or `document` is
    *   undefined (SSR).
    */
-  <T extends HTMLElement = HTMLElement>(selector: string): T[];
+  <T extends Element = HTMLElement>(selector: string): T[];
   /** Assert at least one element matches. Throws {@link DomsureError} if zero. */
   required: typeof requiredMulti;
   /** Query for all matches, warning once in dev if zero match. */

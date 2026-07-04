@@ -17,7 +17,7 @@
  */
 
 import { isDev, markWarned } from './env.ts';
-import { DomsureError } from './errors.ts';
+import { DomsureError, requiredNotFoundError } from './errors.ts';
 import { query } from './query-core.ts';
 import type { RequiredResult } from './types.ts';
 
@@ -37,9 +37,9 @@ import type { RequiredResult } from './types.ts';
  * const app = $.required("#app"); // HTMLElement, never null
  * ```
  */
-function required<T extends HTMLElement = HTMLElement>(selector: string): T {
+function required<T extends Element = HTMLElement>(selector: string): T {
   const el = query<T>(selector);
-  if (!el) throw new DomsureError(`[domsure] Required element not found: ${selector}`, selector);
+  if (!el) throw requiredNotFoundError(selector);
   return el;
 }
 
@@ -70,7 +70,7 @@ function required<T extends HTMLElement = HTMLElement>(selector: string): T {
  * nav.classList.add('active');
  * ```
  */
-function tryRequired<T extends HTMLElement = HTMLElement>(
+function tryRequired<T extends Element = HTMLElement>(
   selector: string,
 ): RequiredResult<T | null> {
   try {
@@ -99,7 +99,7 @@ function tryRequired<T extends HTMLElement = HTMLElement>(
  * const tooltip = $.optional("#tooltip"); // HTMLElement | null
  * ```
  */
-function optional<T extends HTMLElement = HTMLElement>(selector: string): T | null {
+function optional<T extends Element = HTMLElement>(selector: string): T | null {
   const el = query<T>(selector);
   if (!el && isDev() && markWarned(selector)) {
     console.warn(`[domsure] Element not found: ${selector}`);
@@ -121,7 +121,7 @@ function optional<T extends HTMLElement = HTMLElement>(selector: string): T | nu
  * ```
  */
 function exists(selector: string): boolean {
-  return query<HTMLElement>(selector) !== null;
+  return query<Element>(selector) !== null;
 }
 
 interface QueryFn {
@@ -139,7 +139,7 @@ interface QueryFn {
    * @throws {DomsureError} If the selector is invalid or `document` is
    *   undefined (SSR).
    */
-  <T extends HTMLElement = HTMLElement>(selector: string): T | null;
+  <T extends Element = HTMLElement>(selector: string): T | null;
   /** Assert the element exists. Throws {@link DomsureError} if missing. */
   required: typeof required;
   /** Query for a single element, warning once in dev if missing. */
@@ -167,7 +167,7 @@ interface QueryFn {
  * ```
  */
 const $: QueryFn = Object.assign(
-  <T extends HTMLElement = HTMLElement>(selector: string): T | null => query<T>(selector),
+  <T extends Element = HTMLElement>(selector: string): T | null => query<T>(selector),
   { required, optional, exists, tryRequired },
 );
 

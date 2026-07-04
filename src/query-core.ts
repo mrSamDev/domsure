@@ -6,7 +6,7 @@
  * @module
  */
 
-import { DomsureError } from './errors.ts';
+import { invalidSelectorError, ssrError } from './errors.ts';
 
 // Matches simple ID selectors eligible for the getElementById fast path.
 // Compound selectors like `#app .item`, `#app.active`, `#nav > li` MUST fall
@@ -23,15 +23,11 @@ const SIMPLE_ID = /^#[A-Za-z_][\w-]*$/;
 const PURE_ID = /^#[^\s.#:>[+~*\[\]]+$/;
 
 /**
- * Build the SSR guard error. Every query path that checks `document` throws
- * the same message so users get identical guidance regardless of which API
- * they called (`$`, `$$`, or any variant).
+ * Shared SSR guard. Throwing here (not at each call site) keeps the
+ * browser-only failure branded and identical across every query path.
  */
-export function ssrError(): DomsureError {
-  return new DomsureError(
-    `[domsure] document is not available — domsure is browser-only. ` +
-      `Guard calls with typeof window checks in SSR code paths.`,
-  );
+export function assertBrowser(): void {
+  if (typeof document === 'undefined') throw ssrError();
 }
 
 /**
@@ -42,17 +38,29 @@ export function ssrError(): DomsureError {
  * query call, so valid-but-exotic selectors (escaped dots, `:scope`,
  * combinators) still resolve normally.
  */
-function safeQuery<T extends HTMLElement>(
+function safeQuery<T extends Element>(
   run: () => T | null,
   selector: string,
 ): T | null {
   try {
     return run();
   } catch {
-    throw new DomsureError(
-      `[domsure] Invalid selector: ${JSON.stringify(selector)}`,
-      selector,
-    );
+    throw invalidSelectorError(selector);
+  }
+}
+
+/**
+ * Multi-element counterpart of safeQuery: brands a querySelectorAll
+ * DOMException as DomsureError. Same contract, different return shape.
+ */
+export function safeQueryAll<T extends Element>(
+  run: () => NodeListOf<T>,
+  selector: string,
+): T[] {
+  try {
+    return Array.from(run());
+  } catch {
+    throw invalidSelectorError(selector);
   }
 }
 
@@ -65,10 +73,8 @@ function safeQuery<T extends HTMLElement>(
  * `querySelector` first and fall back to `getElementById` on DOMException.
  * Everything else goes through `querySelector` via `safeQuery`.
  */
-export function query<T extends HTMLElement>(selector: string): T | null {
-  if (typeof document === 'undefined') {
-    throw ssrError();
-  }
+export function query<T extends Element>(selector: string): T | null {
+  assertBrowser();
   if (SIMPLE_ID.test(selector)) {
     return safeQuery(
       () => document.getElementById(selector.slice(1)) as T | null,
