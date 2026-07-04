@@ -6,6 +6,8 @@ follows [Semantic Versioning](https://semver.org/). Dates are ISO 8601.
 
 ## [Unreleased]
 ### Added
+- `$.tryRequired` / `$$.tryRequired` — required semantics as a `[error, value]` tuple that never throws. For React effects (error boundaries don't catch effect throws) and other throw-unsafe contexts. Same `DomsureError` as `.required`; SSR-safe (returns the error instead of throwing).
+- `RequiredResult<T>` exported type for the tuple shape.
 - `DomsureError` class for typed `catch` (#3)
 - `$$.required` / `$$.optional` / `$$.exists` — `$$` API parity with `$` (#5)
 - `resetWarnings()` public lifecycle hook (#2)

@@ -8,7 +8,7 @@
 
 `domsure` replaces `document.querySelector(...)!` style non-null assertions
 with real runtime checks that throw branded errors when an element is
-missing. Six helpers, under 1 KB gzipped, zero dependencies, ESM + CJS.
+missing. Eight helpers, under 1 KB gzipped, zero dependencies, ESM + CJS.
 
 ## Install
 
@@ -43,6 +43,28 @@ const app = $.required('#app');      // HTMLElement, never null
 
 Throws `DomsureError` if the selector matches nothing. This is the primary
 use case for the whole package. **Prefer this over the `!` assertion.**
+### `$.tryRequired` — single element, required, never throws
+
+```ts
+const [err, nav] = $.tryRequired('#navbar');  // [DomsureError | null, HTMLElement | null]
+if (err) { report(err); return; }
+nav.classList.add('active');
+```
+
+Required semantics as a `[error, element]` tuple instead of a throw. `[null, el]`
+on success; `[DomsureError, null]` on a miss. The error is the *same* `DomsureError`
+`$.required` would have thrown — same message, same `.selector` — so monitoring
+can't tell which API produced it. Error-first for a clean guard clause.
+
+**Use it where a throw is unrecoverable.** The main case is React
+`useEffect` / `useLayoutEffect`: error boundaries catch render-phase throws,
+*not* effect throws, so `$.required` inside an effect bypasses the boundary and
+crashes the page. `$.tryRequired` lets the effect degrade. Also for event
+handlers without a `try/catch`, or any throw-unsafe call site.
+
+Unlike every other helper, it is **SSR-safe** — it returns `[DomsureError, null]`
+instead of throwing when `document` is undefined. Does not auto-warn; the tuple
+type makes the error visible at every call site, so the caller owns logging.
 
 ### `$.optional` — single element, warns once in dev
 
@@ -66,6 +88,7 @@ Boolean. No warnings, no element back.
 ```ts
 const items = $$('.item');                       // HTMLElement[]
 const rows  = $$.required('.row');               // throws if zero match
+const [rErr, rows2] = $$.tryRequired('.row');    // never throws — tuple
 const maybe = $$.optional('.row');               // warns once in dev if zero
 if ($$.exists('.row')) { /* ... */ }
 ```
@@ -126,7 +149,8 @@ you need to.
 ## SSR / isomorphic code
 
 `domsure` reads `document` directly. Under SSR (`document` is undefined),
-`$` and `$$` throw `DomsureError` instead of failing silently. Guard it:
+`$`, `$$`, and their `.required` / `.optional` / `.exists` variants throw
+`DomsureError` instead of failing silently. Guard it:
 
 ```ts
 if (typeof window !== 'undefined') {
@@ -135,6 +159,10 @@ if (typeof window !== 'undefined') {
 ```
 
 Do not expect null returns under SSR — you get a thrown error by design.
+
+**Exception: `.tryRequired`.** It returns `[DomsureError, null]` under SSR
+instead of throwing, so it is safe to call unguarded. This is deliberate — its
+whole purpose is to be safe in throw-unsafe contexts (React effects, SSR).
 
 ## Common mistakes LLMs make with this package
 
@@ -148,16 +176,21 @@ Do not expect null returns under SSR — you get a thrown error by design.
    fast. If you catch it, rethrow or handle meaningfully — don't return
    a default.
 5. **Adding a null fallback under SSR.** The library throws on purpose.
-   Guard with `typeof window !== 'undefined'` instead.
+   Guard with `typeof window !== 'undefined'` instead. (`.tryRequired` is the
+   one exception — it returns the error under SSR by design.)
 6. **Calling `resetWarnings` in production hot paths.** It's for route
    changes and test isolation, not per-render.
+7. **Using `$.required` inside `useEffect` / `useLayoutEffect`.** React error
+   boundaries do not catch throws from effects — the throw bypasses the
+   boundary and crashes the page. Use `$.tryRequired` (returns a tuple,
+   never throws) and degrade in the error branch.
 
 ## Size
 
 | Bundle | Raw | Gzipped |
 |---|---|---|
-| ESM `dist/index.js`  | ~2.1 KB | ~0.9 KB |
-| CJS `dist/index.cjs` | ~2.6 KB | ~1.1 KB |
+| ESM `dist/index.js`  | ~2.3 KB | ~1.0 KB |
+| CJS `dist/index.cjs` | ~2.8 KB | ~1.24 KB |
 
 Zero runtime dependencies. `sideEffects: false` so bundlers can tree-shake.
 

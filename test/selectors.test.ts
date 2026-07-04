@@ -13,7 +13,7 @@ describe('defineSelectors', () => {
   it('prevents mutation at runtime', () => {
     const S = defineSelectors({ foo: '#foo' } as const);
     expect(() => {
-      (S as any).foo = '#bar';
+      (S as unknown as Record<string, unknown>).foo = '#bar';
     }).toThrow();
   });
 
@@ -43,7 +43,7 @@ describe('defineSelectors validation (dev)', () => {
     const S = defineSelectors({ navbar: '#navbar', items: '.item' } as const);
     expect(Object.isFrozen(S)).toBe(true);
     expect(() => {
-      (S as any).navbar = '#x';
+      (S as unknown as Record<string, unknown>).navbar = '#x';
     }).toThrow();
   });
 });
@@ -55,7 +55,7 @@ describe('defineSelectors validation (production)', () => {
     _setDevOverrideForTests(false);
     // In dev this would throw; in prod the validation is DCE'd out.
     const S = defineSelectors({ x: 42 as unknown as string } as const);
-    expect((S as any).x).toBe(42);
+    expect((S as unknown as Record<string, unknown>).x).toBe(42);
     expect(Object.isFrozen(S)).toBe(true);
   });
 

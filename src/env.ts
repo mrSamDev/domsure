@@ -63,6 +63,9 @@ const warned = new Set<string>();
  */
 export function markWarned(selector: string): boolean {
   if (warned.has(selector)) return false;
+  // Cap reached: reset all dedup state so new selectors can warn again.
+  // Rare in practice — only triggered by dynamic-selector SPAs that exceed
+  // 256 distinct selectors on a single page.
   if (warned.size >= WARNED_CAP) warned.clear();
   warned.add(selector);
   return true;
