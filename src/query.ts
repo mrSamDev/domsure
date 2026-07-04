@@ -51,11 +51,28 @@ function safeQuery<T extends Element>(
   }
 }
 
+// Multi-element counterpart of safeQuery: brands a DOMException from
+// querySelectorAll as DomsureError. Same contract, different return shape.
+function safeQueryAll<T extends Element>(
+  run: () => NodeListOf<T>,
+  selector: string,
+): T[] {
+  try {
+    return Array.from(run());
+  } catch {
+    throw errInvalidSelector(selector);
+  }
+}
+
+// Single SSR guard shared by every query path. Throwing here (rather than at
+// each call site) keeps the "browser-only" failure consistent and branded.
+function assertBrowser(): void {
+  if (typeof document === 'undefined') throw errSsr();
+}
+
 // Single internal query core. All public single-element functions delegate here.
 function query<T extends Element = HTMLElement>(selector: string): T | null {
-  if (typeof document === 'undefined') {
-    throw errSsr();
-  }
+  assertBrowser();
   if (SIMPLE_ID.test(selector)) {
     return safeQuery(
       () => document.getElementById(selector.slice(1)) as T | null,
@@ -188,14 +205,8 @@ const $: QueryFn = Object.assign(
 // Multi-element internal query core. All public multi-element functions
 // delegate here.
 function multiQuery<T extends Element = HTMLElement>(selector: string): T[] {
-  if (typeof document === 'undefined') {
-    throw errSsr();
-  }
-  try {
-    return Array.from(document.querySelectorAll<T>(selector));
-  } catch {
-    throw errInvalidSelector(selector);
-  }
+  assertBrowser();
+  return safeQueryAll(() => document.querySelectorAll<T>(selector), selector);
 }
 
 /**
