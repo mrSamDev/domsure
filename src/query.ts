@@ -40,7 +40,7 @@ const PURE_ID = /^#[^\s.#:>[+~*\[\]]+$/;
  * query call, so valid-but-exotic selectors (escaped dots, `:scope`,
  * combinators) still resolve normally.
  */
-function safeQuery<T extends HTMLElement>(
+function safeQuery<T extends Element>(
   run: () => T | null,
   selector: string,
 ): T | null {
@@ -55,7 +55,7 @@ function safeQuery<T extends HTMLElement>(
 }
 
 // Single internal query core. All public single-element functions delegate here.
-function query<T extends HTMLElement>(selector: string): T | null {
+function query<T extends Element = HTMLElement>(selector: string): T | null {
   if (typeof document === 'undefined') {
     throw new DomsureError(
       `[domsure] document is not available — domsure is browser-only. ` +
@@ -97,7 +97,7 @@ function query<T extends HTMLElement>(selector: string): T | null {
  * const app = $.required("#app"); // HTMLElement, never null
  * ```
  */
-function required<T extends HTMLElement = HTMLElement>(selector: string): T {
+function required<T extends Element = HTMLElement>(selector: string): T {
   const el = query<T>(selector);
   if (!el) throw new DomsureError(`[domsure] Required element not found: ${selector}`, selector);
   return el;
@@ -119,7 +119,7 @@ function required<T extends HTMLElement = HTMLElement>(selector: string): T {
  * const tooltip = $.optional("#tooltip"); // HTMLElement | null
  * ```
  */
-function optional<T extends HTMLElement = HTMLElement>(selector: string): T | null {
+function optional<T extends Element = HTMLElement>(selector: string): T | null {
   const el = query<T>(selector);
   if (!el && isDev() && markWarned(selector)) {
     console.warn(`[domsure] Element not found: ${selector}`);
@@ -141,7 +141,7 @@ function optional<T extends HTMLElement = HTMLElement>(selector: string): T | nu
  * ```
  */
 function exists(selector: string): boolean {
-  return query<HTMLElement>(selector) !== null;
+  return query<Element>(selector) !== null;
 }
 
 interface QueryFn {
@@ -159,7 +159,7 @@ interface QueryFn {
    * @throws {DomsureError} If the selector is invalid or `document` is
    *   undefined (SSR).
    */
-  <T extends HTMLElement = HTMLElement>(selector: string): T | null;
+  <T extends Element = HTMLElement>(selector: string): T | null;
   /** Assert the element exists. Throws {@link DomsureError} if missing. */
   required: typeof required;
   /** Query for a single element, warning once in dev if missing. */
@@ -185,7 +185,7 @@ interface QueryFn {
  * ```
  */
 const $: QueryFn = Object.assign(
-  <T extends HTMLElement = HTMLElement>(selector: string): T | null => query<T>(selector),
+  <T extends Element = HTMLElement>(selector: string): T | null => query<T>(selector),
   { required, optional, exists },
 );
 
@@ -193,7 +193,7 @@ const $: QueryFn = Object.assign(
 
 // Multi-element internal query core. All public multi-element functions
 // delegate here.
-function multiQuery<T extends HTMLElement = HTMLElement>(selector: string): T[] {
+function multiQuery<T extends Element = HTMLElement>(selector: string): T[] {
   if (typeof document === 'undefined') {
     throw new DomsureError(`[domsure] document is not available — domsure is browser-only.`);
   }
@@ -219,7 +219,7 @@ function multiQuery<T extends HTMLElement = HTMLElement>(selector: string): T[] 
  * const rows = $$.required(".row"); // throws if zero rows match
  * ```
  */
-function requiredMulti<T extends HTMLElement = HTMLElement>(selector: string): T[] {
+function requiredMulti<T extends Element = HTMLElement>(selector: string): T[] {
   const els = multiQuery<T>(selector);
   if (els.length === 0) {
     throw new DomsureError(`[domsure] Required elements not found: ${selector}`, selector);
@@ -243,7 +243,7 @@ function requiredMulti<T extends HTMLElement = HTMLElement>(selector: string): T
  * const rows = $$.optional(".row"); // warns once in dev if zero match
  * ```
  */
-function optionalMulti<T extends HTMLElement = HTMLElement>(selector: string): T[] {
+function optionalMulti<T extends Element = HTMLElement>(selector: string): T[] {
   const els = multiQuery<T>(selector);
   if (els.length === 0 && isDev() && markWarned(selector)) {
     console.warn(`[domsure] No elements found: ${selector}`);
@@ -270,7 +270,7 @@ function existsMulti(selector: string): boolean {
   // know if any element matches. Delegate to query() (which handles SSR
   // guards, error branding, and the ID fast path) instead of allocating an
   // array via multiQuery().length > 0.
-  return query<HTMLElement>(selector) !== null;
+  return query<Element>(selector) !== null;
 }
 
 interface MultiQueryFn {
@@ -284,7 +284,7 @@ interface MultiQueryFn {
    * @throws {DomsureError} If the selector is invalid or `document` is
    *   undefined (SSR).
    */
-  <T extends HTMLElement = HTMLElement>(selector: string): T[];
+  <T extends Element = HTMLElement>(selector: string): T[];
   /** Assert at least one element matches. Throws {@link DomsureError} if zero. */
   required: typeof requiredMulti;
   /** Query for all matches, warning once in dev if zero match. */
