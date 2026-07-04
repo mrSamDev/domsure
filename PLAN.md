@@ -119,12 +119,6 @@ new import in every consumer file. Prefer extending `errors.ts`.
        selector,
      );
    }
-   export function errOptionalNotFound(selector: string): DomsureError {
-     return new DomsureError(
-       `[domsure] Element not found: ${selector}`,
-       selector,
-     );
-   }
    export function invalidSelectorError(selector: string): DomsureError {
      return new DomsureError(
        `[domsure] Invalid selector: ${JSON.stringify(selector)}`,
