@@ -1,5 +1,6 @@
 import { describe, it, expectTypeOf, beforeEach } from 'vitest';
-import { $, $$ } from '../src/query';
+import { $ } from '../src/query-single';
+import { $$ } from '../src/query-multi';
 
 // Phase 1: generics widen from HTMLElement to Element so SVG, MathML, and
 // custom elements type-check. SVGSVGElement extends Element, NOT HTMLElement.

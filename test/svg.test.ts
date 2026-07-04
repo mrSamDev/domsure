@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { $, $$ } from '../src/query';
+import { $ } from '../src/query-single';
+import { $$ } from '../src/query-multi';
 import { DomsureError } from '../src/errors';
 
 // SVG elements extend Element, not HTMLElement. These tests lock in the

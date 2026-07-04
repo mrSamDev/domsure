@@ -1,6 +1,4 @@
 /**
- * Branded error class for all domsure failures.
- *
  * @module
  */
 

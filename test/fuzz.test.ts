@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { $, $$ } from '../src/query';
+import { $ } from '../src/query-single';
+import { $$ } from '../src/query-multi';
 import { DomsureError } from '../src/errors';
 
 // Property-based cross-check: domsure is a thin wrapper, so for every

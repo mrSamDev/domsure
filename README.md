@@ -8,7 +8,7 @@
 
 > Replace your `!` assertions with real runtime checks.
 
-Six DOM query helpers under 1 KB gzipped. ESM and CJS. No dependencies.
+Eight DOM query helpers under 1 KB gzipped. ESM and CJS. No dependencies.
 
 ## Before / After
 
@@ -45,10 +45,12 @@ import { $, $$, defineSelectors, DomsureError } from 'domsure';
 
 $(selector)        // HTMLElement | null  - silent query
 $.required(sel)    // HTMLElement        - throw if missing
+$.tryRequired(sel) // [DomsureError|null, HTMLElement|null] - required, never throws
 $.optional(sel)    // HTMLElement | null - warn once in dev if missing
 $.exists(sel)      // boolean            - presence check
 $$(selector)       // HTMLElement[]      - querySelectorAll as an array
 $$.required(sel)   // HTMLElement[]      - throw if none match
+$$.tryRequired(sel)// [DomsureError|null, HTMLElement[]] - required, never throws
 $$.optional(sel)   // HTMLElement[]      - warn once in dev if none match
 $$.exists(sel)     // boolean            - presence check
 defineSelectors(s) // Readonly registry  - frozen, typed selector map
@@ -70,6 +72,21 @@ Asserts the element exists. Throws `DomsureError` if it doesn't. This is the who
 ```ts
 const app = $.required('#app');   // HTMLElement, never null
 ```
+### `$.tryRequired`
+
+Required semantics, but returns a `[error, element]` tuple instead of throwing. `[null, el]` on success; `[DomsureError, null]` on a miss. The error is the same `DomsureError` `$.required` would have thrown — same message, same `.selector` — so monitoring groups them together.
+
+Use it where a throw is unrecoverable. The main case is React `useEffect` / `useLayoutEffect`: error boundaries catch render-phase throws, **not** effect throws, so a `$.required` inside an effect bypasses the boundary and crashes the page. `$.tryRequired` lets the effect degrade instead.
+
+Error-first for a clean guard clause:
+
+```ts
+const [err, nav] = $.tryRequired('#navbar');
+if (err) { report(err); return; }   // missing is a bug — degrade, don't crash
+nav.classList.add('active');
+```
+
+Unlike `$.required`, it is safe under SSR — it returns `[DomsureError, null]` instead of throwing. Does not auto-warn; the tuple type makes the error visible at the call site, so the caller owns logging and telemetry.
 
 ### `$.optional`
 
@@ -94,7 +111,8 @@ if ($.exists('#tooltip')) { /* ... */ }
 ```ts
 const items = $$('.item').map(el => el.textContent);
 
-const required = $$.required('.row');   // throws if zero rows match
+const required = $$.required('.row');    // throws if zero rows match
+const [err, rows] = $$.tryRequired('.row'); // never throws — tuple
 const maybe    = $$.optional('.row');    // warns once in dev if zero match
 if ($$.exists('.row')) { /* ... */ }
 ```
@@ -156,8 +174,8 @@ if (typeof window !== 'undefined') {
 
 | | raw | gzipped |
 |---|---|---|
-| ESM (`dist/index.js`) | ~2.1 KB | ~0.9 KB |
-| CJS (`dist/index.cjs`) | ~2.6 KB | ~1.1 KB |
+| ESM (`dist/index.js`) | ~2.3 KB | ~1.0 KB |
+| CJS (`dist/index.cjs`) | ~2.8 KB | ~1.24 KB |
 
 Measured on the published build. Zero runtime dependencies.
 
