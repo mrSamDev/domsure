@@ -76,10 +76,12 @@ function tryRequired<T extends Element = HTMLElement>(
   try {
     return [null, required<T>(selector)];
   } catch (e) {
-    // required() only ever throws DomsureError (not-found, invalid selector,
-    // SSR). The cast is safe; the catch exists to convert the throw into a
-    // tuple value, not to defend against a non-DomsureError.
-    return [e as DomsureError, null];
+    // required() only throws DomsureError (not-found, invalid selector, SSR).
+    // Guard the type rather than casting: if a future code path or an exotic
+    // engine ever throws something else, rethrow it instead of silently
+    // rebranding it as DomsureError — never swallow an unknown failure.
+    if (e instanceof DomsureError) return [e, null];
+    throw e;
   }
 }
 
@@ -128,8 +130,7 @@ interface QueryFn {
   /**
    * Single-element DOM query. Returns the first match or `null`.
    *
-   * Simple `#id` selectors use `getElementById` (faster than
-   * `querySelector`). Compound selectors like `#app .item` or `#nav.active`
+   * Simple `#id` selectors use `getElementById`. Compound selectors like `#app .item` or `#nav.active`
    * fall through to `querySelector`. Never warns.
    *
    * @template T - Narrows the return type. A cast, not tag inference.
@@ -153,7 +154,7 @@ interface QueryFn {
 /**
  * Single-element DOM query. Returns the first match or `null`.
  *
- * Simple `#id` selectors use `getElementById` (faster than `querySelector`).
+ * Simple `#id` selectors use `getElementById`.
  * Compound selectors like `#app .item` or `#nav.active` fall through to
  * `querySelector`. Never warns — use `.optional` for dev warnings or
  * `.required` to throw on a miss.

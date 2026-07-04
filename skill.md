@@ -86,7 +86,7 @@ Run this when the user asks to migrate existing raw-DOM code.
 | `document.querySelectorAll('.row')` + throw if empty | `$$.required('.row')` |
 | `$.required(sel)` in `useEffect` / throw-unsafe context | `$.tryRequired(sel)` |
 
-Simple `#id` selectors hit `getElementById` internally (faster). Compound
+Simple `#id` selectors use `getElementById` internally. Compound
 selectors like `#app .item` or `#nav.active` fall through to
 `querySelector`. You don't choose the path — pass the selector as-is.
 

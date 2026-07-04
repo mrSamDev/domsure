@@ -78,7 +78,10 @@ function tryRequiredMulti<T extends Element = HTMLElement>(
   try {
     return [null, requiredMulti<T>(selector)];
   } catch (e) {
-    return [e as DomsureError, []];
+    // Guard the type rather than casting: rethrow anything that isn't a
+    // DomsureError instead of silently rebranding an unknown failure.
+    if (e instanceof DomsureError) return [e, []];
+    throw e;
   }
 }
 

@@ -18,6 +18,9 @@ const IS_DEV: boolean = (() => {
   try {
     // @ts-ignore: process is a runtime global in Node, Bun, and Deno 2.
     // @types/node types it for npm builds; Deno has it at runtime without the lib.
+    // @ts-ignore (not @ts-expect-error) on purpose: the error this suppresses
+    // is context-dependent (present under Deno's lib, absent under @types/node),
+    // so @ts-expect-error would fail the npm build with TS2578 when unused.
     return typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production';
   } catch {
     return false;
@@ -49,9 +52,12 @@ export function isDev(): boolean {
 //
 // Bounded (cap 256) so a long-lived SPA with dynamic selectors
 // (`#cell-${row}-${col}` over a virtualized grid) cannot leak indefinitely.
-// 256 is far above any realistic distinct-selector count for a single page;
-// hitting the cap clears the set (FIFO-ish reset) — rare in practice, but
-// caps worst-case memory at ~256 strings.
+// 256 is far above any realistic distinct-selector count for a single page.
+// On overflow we do NOT clear: clearing would re-arm every previously-quiet
+// selector and cause a warning storm across the whole app. Instead, once at
+// cap we stop tracking new selectors — they warn on every call (the
+// unavoidable cost of exceeding the cap) while the 256 already-seen selectors
+// stay quiet. Overflow noise is contained to new selectors only.
 const WARNED_CAP = 256;
 const warned = new Set<string>();
 
@@ -63,10 +69,11 @@ const warned = new Set<string>();
  */
 export function markWarned(selector: string): boolean {
   if (warned.has(selector)) return false;
-  // Cap reached: reset all dedup state so new selectors can warn again.
-  // Rare in practice — only triggered by dynamic-selector SPAs that exceed
-  // 256 distinct selectors on a single page.
-  if (warned.size >= WARNED_CAP) warned.clear();
+  // Cap reached: keep existing dedup intact, don't add. The new selector
+  // warns this call (and on future calls, since we can't track it without
+  // exceeding the cap) — but the 256 selectors already seen stay quiet.
+  // This contains overflow noise to new selectors instead of re-warning all.
+  if (warned.size >= WARNED_CAP) return true;
   warned.add(selector);
   return true;
 }
@@ -76,6 +83,9 @@ export function markWarned(selector: string): boolean {
  * {@link $$.optional} warn again for selectors that already fired one this
  * session. Handy in long-lived SPAs after a route change, when previously
  * missing elements reappear. Also the hook test suites use for isolation.
+ *
+ * The dedup set is a module-level singleton. For multi-app bundle isolation,
+ * scope your own `$`/`$$` wrappers per app.
  *
  * @example
  * ```ts

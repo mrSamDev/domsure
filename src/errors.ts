@@ -39,6 +39,19 @@ export class DomsureError extends Error {
     // ES5, extending built-ins breaks instanceof unless we re-link the chain.
     Object.setPrototypeOf(this, DomsureError.prototype);
   }
+
+  /**
+   * Cross-realm `instanceof` support. `Error` subclass `instanceof` checks
+   * fail across iframe/VM boundaries because each realm has its own
+   * `DomsureError` constructor. Duck-type on `.name` instead — it's set in
+   * the constructor and survives realm boundaries. This keeps `tryRequired`'s
+   * guard (`e instanceof DomsureError`) working when the error was thrown in
+   * an iframe and caught in the parent.
+   */
+  static override [Symbol.hasInstance](instance: unknown): boolean {
+    return typeof instance === 'object' && instance !== null &&
+      (instance as Error).name === 'DomsureError';
+  }
 }
 
 // Centralized message construction. One source of truth for wording so the
