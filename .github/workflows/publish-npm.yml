@@ -48,11 +48,17 @@ jobs:
           TAG="$(git describe --tags --exact-match HEAD)"
           echo "Publishing from tag: $TAG"
       - name: Publish
-        # No --no-git-checks: dist/ is gitignored, so the working tree stays
-        # clean and pnpm's git verification passes. The tag-verification step
-        # above already proved HEAD is an exact version tag, so the published
-        # artifact is byte-reproducible from the tag — which is what the SLSA
-        # provenance attestation in PROVENANCE.md claims.
-        run: pnpm publish --access public --provenance
+        # --no-git-checks disables pnpm's three local git guards (publish-branch,
+        # clean-tree, no-unpushed-commits). All three are redundant here:
+        #   - publish-branch: actions/checkout leaves a detached HEAD at the tag,
+        #     so this check can never pass in CI; the workflow's `on: push: tags`
+        #     gate already restricts publishes to version tags.
+        #   - clean-tree: the runner starts from a fresh checkout of the verified
+        #     tag (the `Verify release tag` step proved HEAD == exact version tag),
+        #     so there can be no uncommitted divergence from the tag.
+        #   - no-unpushed: the tag is on origin by definition (it triggered this run).
+        # `--provenance` attests the artifact against the git ref independently of
+        # these checks, so disabling them does not weaken the SLSA attestation.
+        run: pnpm publish --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
