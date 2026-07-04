@@ -16,7 +16,7 @@
  */
 
 import { isDev, markWarned } from './env.ts';
-import { DomsureError } from './errors.ts';
+import { DomsureError, errRequiredNotFound, errInvalidSelector, errSsr, errRequiredMultiNotFound } from './errors.ts';
 
 // Matches simple ID selectors eligible for the getElementById fast path.
 // Compound selectors like `#app .item`, `#app.active`, `#nav > li` MUST fall
@@ -47,20 +47,14 @@ function safeQuery<T extends Element>(
   try {
     return run();
   } catch {
-    throw new DomsureError(
-      `[domsure] Invalid selector: ${JSON.stringify(selector)}`,
-      selector,
-    );
+    throw errInvalidSelector(selector);
   }
 }
 
 // Single internal query core. All public single-element functions delegate here.
 function query<T extends Element = HTMLElement>(selector: string): T | null {
   if (typeof document === 'undefined') {
-    throw new DomsureError(
-      `[domsure] document is not available — domsure is browser-only. ` +
-        `Guard calls with typeof window checks in SSR code paths.`,
-    );
+    throw errSsr();
   }
   if (SIMPLE_ID.test(selector)) {
     return safeQuery(
@@ -99,7 +93,7 @@ function query<T extends Element = HTMLElement>(selector: string): T | null {
  */
 function required<T extends Element = HTMLElement>(selector: string): T {
   const el = query<T>(selector);
-  if (!el) throw new DomsureError(`[domsure] Required element not found: ${selector}`, selector);
+  if (!el) throw errRequiredNotFound(selector);
   return el;
 }
 
@@ -195,12 +189,12 @@ const $: QueryFn = Object.assign(
 // delegate here.
 function multiQuery<T extends Element = HTMLElement>(selector: string): T[] {
   if (typeof document === 'undefined') {
-    throw new DomsureError(`[domsure] document is not available — domsure is browser-only.`);
+    throw errSsr();
   }
   try {
     return Array.from(document.querySelectorAll<T>(selector));
   } catch {
-    throw new DomsureError(`[domsure] Invalid selector: ${JSON.stringify(selector)}`, selector);
+    throw errInvalidSelector(selector);
   }
 }
 
@@ -222,7 +216,7 @@ function multiQuery<T extends Element = HTMLElement>(selector: string): T[] {
 function requiredMulti<T extends Element = HTMLElement>(selector: string): T[] {
   const els = multiQuery<T>(selector);
   if (els.length === 0) {
-    throw new DomsureError(`[domsure] Required elements not found: ${selector}`, selector);
+    throw errRequiredMultiNotFound(selector);
   }
   return els;
 }

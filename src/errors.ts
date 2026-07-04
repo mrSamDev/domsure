@@ -42,3 +42,38 @@ export class DomsureError extends Error {
     Object.setPrototypeOf(this, DomsureError.prototype);
   }
 }
+
+// Centralized message construction. One source of truth for wording so the
+// query/selectors modules stay consistent and future localization is a
+// single-file change. Tests assert on these substrings — keep them stable.
+
+export function errRequiredNotFound(selector: string): DomsureError {
+  return new DomsureError(`[domsure] Required element not found: ${selector}`, selector);
+}
+
+export function errRequiredMultiNotFound(selector: string): DomsureError {
+  return new DomsureError(`[domsure] Required elements not found: ${selector}`, selector);
+}
+
+export function errInvalidSelector(selector: string): DomsureError {
+  return new DomsureError(`[domsure] Invalid selector: ${JSON.stringify(selector)}`, selector);
+}
+
+export function errSsr(): DomsureError {
+  return new DomsureError(
+    `[domsure] document is not available — domsure is browser-only. ` +
+      `Guard calls with typeof window checks in SSR code paths.`,
+  );
+}
+
+export function errSelectorValue(key: string, kind: string): DomsureError {
+  return new DomsureError(
+    `[domsure] defineSelectors: value for "${key}" is ${kind}, expected a selector string`,
+  );
+}
+
+export function errDuplicateSelector(value: string, prev: string, key: string): DomsureError {
+  return new DomsureError(
+    `[domsure] defineSelectors: duplicate selector "${value}" on keys "${prev}" and "${key}"`,
+  );
+}
