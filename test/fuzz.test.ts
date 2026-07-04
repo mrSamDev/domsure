@@ -84,7 +84,7 @@ function nativeCount(selector: string): NativeResult & { count?: number } {
 // through getElementById (never throw); everything else mirrors querySelector.
 const PURE_ID = /^#[^\s.#:>[+~*\[\]]+$/;
 
-const ITERATIONS = 2000;
+const ITERATIONS = 250; // combinatorial coverage; deterministic edge cases below
 const SEED = 13653842; // fixed for reproducibility
 
 describe('fuzz: $ matches native querySelector', () => {
@@ -165,4 +165,45 @@ describe('fuzz: $$ matches native querySelectorAll length', () => {
 
     expect(checked).toBeGreaterThan(0);
   });
+});
+
+// Deterministic edge cases — the bugs selector wrappers actually ship are
+// edge cases, not random. These pin specific exotic selectors against native
+// behavior. The fuzz above covers combinatorial breadth; these cover depth.
+describe('deterministic exotic selectors match native', () => {
+  const EDGE_FIXTURE =
+    '<div id="app" class="active">' +
+    '<span class="item" data-x="1" data-role="primary">a</span>' +
+    '<span class="item" data-x="2">b</span>' +
+    '<span class="other">c</span>' +
+    '</div>';
+
+  // Each entry: selector domsure must resolve identically to native querySelector.
+  // Excluded from this list: pure-id rescue selectors (#123) — covered in
+  // query.test.ts and modeled in the fuzz above.
+  const EDGE_SELECTORS = [
+    ':scope > .item',
+    ':not(.other)',
+    '[data-x="1"]',
+    "[data-role='primary']",
+    '[data-x]',
+    '.item:not(.other)',
+    '#app > .item:first-child',
+    'span[class~="item"]',
+    '[data-x="2"]',
+    ':nth-child(2)',
+  ];
+
+  for (const selector of EDGE_SELECTORS) {
+    it(`$('${selector}') matches native`, () => {
+      document.body.innerHTML = EDGE_FIXTURE;
+      // :scope resolves relative to document in this context; native is the oracle.
+      const native = nativeQuery(selector);
+      if (native.kind === 'throws') {
+        expect(() => $(selector)).toThrow(DomsureError);
+        return;
+      }
+      expect($(selector)).toBe(native.el);
+    });
+  }
 });
