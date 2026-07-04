@@ -16,7 +16,7 @@
  */
 
 import { isDev, markWarned } from './env.ts';
-import { DomsureError, errRequiredNotFound, errInvalidSelector, errSsr, errRequiredMultiNotFound } from './errors.ts';
+import { DomsureError, requiredNotFoundError, invalidSelectorError, ssrError, requiredMultiNotFoundError } from './errors.ts';
 
 // Matches simple ID selectors eligible for the getElementById fast path.
 // Compound selectors like `#app .item`, `#app.active`, `#nav > li` MUST fall
@@ -47,7 +47,7 @@ function safeQuery<T extends Element>(
   try {
     return run();
   } catch {
-    throw errInvalidSelector(selector);
+    throw invalidSelectorError(selector);
   }
 }
 
@@ -60,14 +60,14 @@ function safeQueryAll<T extends Element>(
   try {
     return Array.from(run());
   } catch {
-    throw errInvalidSelector(selector);
+    throw invalidSelectorError(selector);
   }
 }
 
 // Single SSR guard shared by every query path. Throwing here (rather than at
 // each call site) keeps the "browser-only" failure consistent and branded.
 function assertBrowser(): void {
-  if (typeof document === 'undefined') throw errSsr();
+  if (typeof document === 'undefined') throw ssrError();
 }
 
 // Single internal query core. All public single-element functions delegate here.
@@ -110,7 +110,7 @@ function query<T extends Element = HTMLElement>(selector: string): T | null {
  */
 function required<T extends Element = HTMLElement>(selector: string): T {
   const el = query<T>(selector);
-  if (!el) throw errRequiredNotFound(selector);
+  if (!el) throw requiredNotFoundError(selector);
   return el;
 }
 
@@ -227,7 +227,7 @@ function multiQuery<T extends Element = HTMLElement>(selector: string): T[] {
 function requiredMulti<T extends Element = HTMLElement>(selector: string): T[] {
   const els = multiQuery<T>(selector);
   if (els.length === 0) {
-    throw errRequiredMultiNotFound(selector);
+    throw requiredMultiNotFoundError(selector);
   }
   return els;
 }

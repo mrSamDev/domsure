@@ -1,5 +1,5 @@
 import { isDev } from './env.ts';
-import { errSelectorValue, errDuplicateSelector } from './errors.ts';
+import { selectorValueError, duplicateSelectorError } from './errors.ts';
 import type { DomsureError } from './errors.ts';
 import type { SelectorSchema, SelectorMap } from './types.ts';
 
@@ -45,11 +45,11 @@ export function defineSelectors<T extends SelectorSchema>(schema: T): SelectorMa
     const seen = new Map<string, string>(); // selector -> first key that used it
     for (const [key, value] of Object.entries(schema)) {
       if (typeof value !== 'string') {
-        throw errSelectorValue(key, typeof value);
+        throw selectorValueError(key, typeof value);
       }
       const prev = seen.get(value);
       if (prev !== undefined) {
-        throw errDuplicateSelector(value, prev, key);
+        throw duplicateSelectorError(value, prev, key);
       }
       seen.set(value, key);
     }
