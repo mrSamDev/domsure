@@ -197,16 +197,6 @@ NODE_ENV=production deno run main.ts
 
 Measured on the published build. Zero runtime dependencies.
 
-## Comparison
-
-| | Raw DOM | jQuery | domsure |
-|---|---|---|---|
-| Size | 0 | ~30 KB | < 1 KB gz |
-| Missing element | silent null / `!` hides it | silent empty set | `$.required` throws |
-| Dev warnings | none | none | `$.optional` warns once |
-| `querySelectorAll` | `NodeList` | jQuery object | `Array` |
-| Branded errors | no | no | `DomsureError` |
-| Dependencies | none | jQuery | none |
 
 ## License
 
